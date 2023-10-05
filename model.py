@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import torchvision.models as models
 
@@ -32,3 +33,21 @@ class RNN(nn.Module):
 
     def forward(self, features, cap_tokens):
         cap_embedding = self.embed(cap_tokens[:, :-1])
+        embeddings = torch.concat((features.unsqueeze(dim=1), cap_embedding), dim=1)
+        lstm_out, self.states = self.lstm(embeddings)
+        outputs = self.linear(lstm_out)
+        return outputs
+    
+    def sample(self, inputs, states=None, max_len=20):
+        res = []
+
+        for _ in range(max_len):
+            lstm_out, states = self.lstm(inputs, states)
+            outputs = self.linear(lstm_out.squeeze(dim=1))
+            _, word_idx = outputs.max(dim=1)
+            res.append(word_idx.item())
+            if word_idx == 1:
+                break
+            inputs = self.embed(word_idx)
+            inputs = inputs.unsqueeze(1)
+        return res
