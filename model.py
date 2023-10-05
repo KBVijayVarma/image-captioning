@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torchvision.models as models
 
-
+# Encoder
 class CNN(nn.Module):
     def __init__(self, embed_size):
         super().__init__()
@@ -18,3 +18,17 @@ class CNN(nn.Module):
         features = features.view(features.size(0), -1)
         features = self.embed(features)
         return features
+
+# ----------- Decoder ------------
+class RNN(nn.Module):
+    def __init__(self, vocab_size, embed_size, hidden_size, num_layers=1):
+        super().__init__()
+        self.vocab_size = vocab_size
+        self.embed_size = embed_size
+        self.hidden_size = hidden_size
+        self.embed = nn.Embedding(self.vocab_size, self.embed_size)
+        self.lstm = nn.LSTM(self.embed_size, self.hidden_size, num_layers)
+        self.linear = nn.Linear(self.hidden_size, self.vocab_size)
+
+    def forward(self, features, cap_tokens):
+        cap_embedding = self.embed(cap_tokens[:, :-1])
