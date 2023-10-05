@@ -1,30 +1,14 @@
-import os
-from PIL import Image
-from torch.utils.data import Dataset
-from pycocotools.coco import COCO
+from torch.utils.data import DataLoader
+from imgcaptioning.tokenizer import Tokenizer
+from imgcaptioning.utils import get_batches
 
-
-class CocoDataset(Dataset):
-    def __init__(self, img_dir, annotations_file, transform=None):
-        self.img_dir = img_dir
-        self.annotations_file = annotations_file
-        self.coco = COCO(annotations_file)
-        self.transform = transform
-
-    def __len__(self):
-        return len(self.coco.getImgIds())
-
-    def __getitem__(self, idx):
-        img_id = self.coco.getImgIds()[idx]
-        img_info = self.coco.loadImgs(img_id)[0]
-        img_path = os.path.join(self.img_dir, img_info['file_name'])
-        image = Image.open(img_path).convert('RGB')
-
-        if self.transform:
-            image = self.transform(image)
-
-        captions_ids = self.coco.getAnnIds(imgIds=img_id)
-        captions = [self.coco.loadAnns(c_id)[0]['caption']
-                    for c_id in captions_ids]
-
-        return image, captions
+def get_loader(transform, batch_size):
+    dataset = Tokenizer(
+        "coco_dataset/train2017",
+        "coco_dataset/annotations/captions_train2017.json",
+        5, #vocab_threshold
+        transform
+    )
+    batches = get_batches(dataset.captions_len, batch_size)
+    data_loader = DataLoader(dataset, batch_sampler=batches)
+    return data_loader, len(batches)
