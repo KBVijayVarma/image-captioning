@@ -15,7 +15,7 @@ def inference(image):
             transforms.Resize(224),
             transforms.ToTensor(),
             transforms.Normalize(
-                (0.485, 0.456, 0.406),  # normalize image for pre-trained model
+                (0.485, 0.456, 0.406),
                 (0.229, 0.224, 0.225),
             ),
         ]
@@ -33,18 +33,13 @@ def inference(image):
     encoder = CNN(embed_size=embed_size)
     decoder = RNN(len(voc), embed_size, hidden_size)
 
-    encoder.load_state_dict(torch.load(os.path.join(
-        "./models", encoder_file), map_location=torch.device('cpu')))
-    decoder.load_state_dict(torch.load(os.path.join(
-        "./models", decoder_file), map_location=torch.device('cpu')))
+    encoder.load_state_dict(torch.load(os.path.join("./models", encoder_file), map_location=torch.device('cpu')))
+    decoder.load_state_dict(torch.load(os.path.join("./models", decoder_file), map_location=torch.device('cpu')))
 
     encoder.eval()
     decoder.eval()
     img = Image.open(io.BytesIO(image.read())).convert('RGB')
     img = transform_test(img=img)
-    # print(img.shape)
-    # image = Image.open("coco_dataset/val2017/000000167898.jpg").convert('RGB')
-    # img = transform_test(img=image)
     img = img.unsqueeze(0)
 
     with torch.no_grad():
